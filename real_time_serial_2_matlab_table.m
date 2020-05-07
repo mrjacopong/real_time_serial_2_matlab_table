@@ -20,12 +20,11 @@
 
 
 
-clear 
 %controlla le seriali aperte
 serialportlist("available");
 
 %apre COM3 e crea un ogetto arduino dal quale poi si leggono le cose
-arduinoObj = serialport("COM3",9600)
+arduinoObj = serialport("COM3",9600);
 
 %setta il terminatore per la callback function come il carattere accapo
 configureTerminator(arduinoObj,"CR/LF");
@@ -43,11 +42,12 @@ flush(arduinoObj);
         string VariableNames
     }
 %}
-arduinoObj.UserData = struct("Data",[],"Count",1,"VariableNames","")
+arduinoObj.UserData = struct("Data",[],"Count",1,"VariableNames","");
 
 %pushbutton per fermare il collegamento e staccare la porta seriale
 c = uicontrol('Style','pushbutton','String','stop');
 c.Callback = @stoppa;
+c.UserData = 0;
 uicontrol(c);
 
 %semplicemente quando da seriale leggo la stringa di terminator (accapo)
@@ -74,7 +74,11 @@ nomi_variabili=arduinoObj.UserData.VariableNames;
 %}
 
 function stoppa(src,event)
-        clear arduinoObj    %non funziona, non cancella la variabile dalla workspace
+        evalin('base','dati_raccolti=arduinoObj.UserData.Data;')
+        evalin('base','nomi_variabili=arduinoObj.UserData.VariableNames;')
+        evalin('base','ConvertToTable(dati_raccolti,nomi_variabili)')
+        evalin('base','clear arduinoObj dati_raccolti nomi_variabili c ans ')
+        
     end
 
 function readSineWaveData(src, ~)
@@ -107,6 +111,7 @@ plot(src.UserData.Data(2:end,1),src.UserData.Data(2:end,2:end))
 % callbacks and plot the data.
 if src.UserData.Count > 1000
     configureCallback(src, "off");
+    stoppa;
     
 end
 end
